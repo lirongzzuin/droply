@@ -16,6 +16,8 @@ export interface CreateOrderInput {
   amount: number;
   idempotencyKey: string;
   paymentKey?: string;
+  /** PortOne 등에서 이미 검증된 결제 — 제공 시 내부 mock 승인을 건너뛴다 */
+  preVerified?: { txnId: string; pending?: boolean };
 }
 
 export interface CreateOrderResult {
@@ -40,10 +42,16 @@ export async function createOrder(input: CreateOrderInput): Promise<CreateOrderR
     let pgTxnId: string | undefined;
 
     if (method === "PG") {
-      const approval = await approvePayment({ amount: settle.amount, orderId, paymentKey: input.paymentKey });
-      if (!approval.approved) throw new Error("PAYMENT_DECLINED");
-      status = "PAID";
-      pgTxnId = approval.pgTxnId;
+      if (input.preVerified) {
+        // PortOne에서 결제 검증 완료 — 가상계좌 발급(입금대기)이면 PENDING 유지
+        status = input.preVerified.pending ? "PENDING" : "PAID";
+        pgTxnId = input.preVerified.txnId;
+      } else {
+        const approval = await approvePayment({ amount: settle.amount, orderId, paymentKey: input.paymentKey });
+        if (!approval.approved) throw new Error("PAYMENT_DECLINED");
+        status = "PAID";
+        pgTxnId = approval.pgTxnId;
+      }
     }
 
     const order: OrderRecord = {
@@ -94,6 +102,18 @@ export function listMyOrders(userId: string): OrderRecord[] {
 
 export function getOrder(orderId: string): OrderRecord | undefined {
   return state().orders.find((o) => o.id === orderId);
+}
+
+export function findOrderByTxn(txnId: string): OrderRecord | undefined {
+  return state().orders.find((o) => o.pgTxnId === txnId);
+}
+
+/** 웹훅: 가상계좌 입금완료 등 사후 결제 반영 (PENDING→PAID, 멱등) */
+export function markOrderPaidByTxn(txnId: string): boolean {
+  const o = findOrderByTxn(txnId);
+  if (!o) return false;
+  if (o.status === "PENDING") o.status = "PAID";
+  return true;
 }
 
 /** 구매자 수령 확정 → COMPLETED + 판매자 신뢰도 가산 */

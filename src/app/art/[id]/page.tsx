@@ -132,7 +132,7 @@ export default async function ArtworkDetail({ params }: { params: { id: string }
 
       {/* 판매 방식별 스티키 CTA */}
       {art.saleType === "FIXED" ? (
-        <BuyBar artwork={art} loggedIn={Boolean(user)} />
+        <BuyBar artwork={art} loggedIn={Boolean(user)} viewerName={user?.displayName} />
       ) : art.saleType === "AUCTION" ? (
         <StickyCta
           href={`/auction/${art.id}`}

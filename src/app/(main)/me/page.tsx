@@ -6,6 +6,7 @@ import { Icon } from "@/components/Icon";
 import { getCurrentUser } from "@/lib/session";
 import { logout } from "@/app/actions/auth";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { IdentityVerifyButton } from "@/components/IdentityVerifyButton";
 
 export const metadata = { title: "내 프로필" };
 
@@ -41,6 +42,8 @@ export default function MePage() {
             </div>
           </div>
         </section>
+
+        <IdentityVerifyButton alreadyVerified={user.isVerified} />
 
         {!user.isArtist && (
           <Link href="/new" className="mt-stack-lg flex items-center justify-between p-4 bg-acid-lime/5 border border-acid-lime/20 rounded-xl">
