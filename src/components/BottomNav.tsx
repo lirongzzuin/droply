@@ -24,7 +24,7 @@ export function BottomNav() {
             <Icon
               name={item.icon}
               fill={active && !item.accent}
-              className={cn(item.accent && "text-[32px] text-acid-lime")}
+              className={cn(item.accent && "text-[32px] text-acid-on")}
             />
             <span className={cn("font-mono text-[10px] mt-1", item.accent && "mt-0.5")}>{item.label}</span>
           </Link>

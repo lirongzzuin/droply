@@ -23,7 +23,7 @@ export default function AdminPage() {
       <main className="pt-16 pb-24 px-container-margin">
         <div className="mt-stack-lg mb-stack-md flex items-center justify-between">
           <h2 className="font-display text-headline-sm">신고 큐</h2>
-          <span className="font-mono text-label-caps text-acid-lime bg-acid-lime/10 px-3 py-1 rounded-full">대기 {open}건</span>
+          <span className="font-mono text-label-caps text-acid-on bg-acid-lime/10 px-3 py-1 rounded-full">대기 {open}건</span>
         </div>
 
         {reports.length === 0 ? (
@@ -39,7 +39,7 @@ export default function AdminPage() {
                   <div>
                     <span className="font-mono text-label-caps text-secondary uppercase">{r.targetType}</span>
                     <p className="font-bold mt-1">{r.reason}</p>
-                    <Link href={r.targetType === "ARTWORK" || r.targetType === "CHAT" ? `/art/${r.targetId}` : "#"} className="text-acid-lime text-sm font-mono">#{r.targetId}</Link>
+                    <Link href={r.targetType === "ARTWORK" || r.targetType === "CHAT" ? `/art/${r.targetId}` : "#"} className="text-acid-on text-sm font-mono">#{r.targetId}</Link>
                     <p className="text-[10px] text-secondary/60 font-mono mt-1" suppressHydrationWarning>{timeAgo(r.createdAt)}</p>
                   </div>
                   <span className={cn("text-[10px] font-mono px-2 py-0.5 rounded uppercase", r.status === "OPEN" ? "bg-error/10 text-error" : "bg-surface-container-high text-secondary")}>

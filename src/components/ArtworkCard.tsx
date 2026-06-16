@@ -41,7 +41,7 @@ export function ArtworkCard({ artwork, ratio = "aspect-[3/4]" }: { artwork: Artw
           <p className="font-mono text-primary-fixed-dim text-sm">{formatKRW(artwork.displayPrice)}</p>
         </div>
         <button onClick={() => toggle(artwork.id)} aria-pressed={liked} aria-label="좋아요" className="shrink-0">
-          <span className={cn("material-symbols-outlined transition-colors", liked ? "fill text-acid-lime" : "text-secondary hover:text-error")} aria-hidden>
+          <span className={cn("material-symbols-outlined transition-colors", liked ? "fill text-acid-on" : "text-secondary hover:text-error")} aria-hidden>
             favorite
           </span>
         </button>

@@ -22,7 +22,7 @@ export function SaleBadge({ artwork }: { artwork: Artwork }) {
     );
   }
   return (
-    <span className="bg-surface-container-highest text-white px-3 py-1.5 rounded font-mono text-label-caps">
+    <span className="bg-black/70 glass text-white px-3 py-1.5 rounded font-mono text-label-caps">
       정가 판매
     </span>
   );

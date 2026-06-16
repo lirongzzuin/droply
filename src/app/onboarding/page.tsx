@@ -12,7 +12,7 @@ export default function Onboarding({ searchParams }: { searchParams: { via?: str
 
   return (
     <div className="min-h-screen max-w-md mx-auto px-container-margin py-12 flex flex-col">
-      <div className="flex items-center gap-2 text-acid-lime">
+      <div className="flex items-center gap-2 text-acid-on">
         <Icon name="check_circle" fill />
         <span className="font-mono text-label-caps uppercase">
           {searchParams.via ? `${searchParams.via} 연결 완료` : "환영합니다"}
@@ -32,7 +32,7 @@ export default function Onboarding({ searchParams }: { searchParams: { via?: str
             defaultValue={user.handle}
             className="bg-transparent border-0 outline-none text-lg font-mono text-primary w-full"
           />
-          <Icon name="check" className="text-acid-lime" />
+          <Icon name="check" className="text-acid-on" />
         </div>
         <p className="text-secondary text-xs mt-2">영문 소문자/숫자/언더스코어, 3~20자.</p>
       </div>

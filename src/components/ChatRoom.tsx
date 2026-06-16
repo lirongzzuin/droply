@@ -156,13 +156,13 @@ function FraudModal({ onClose }: { onClose: () => void }) {
     }
   }
 
-  const riskColor = result?.riskLevel === "DANGER" ? "text-error" : result?.riskLevel === "CAUTION" ? "text-primary-fixed-dim" : "text-acid-lime";
+  const riskColor = result?.riskLevel === "DANGER" ? "text-error" : result?.riskLevel === "CAUTION" ? "text-primary-fixed-dim" : "text-acid-on";
 
   return (
     <div className="fixed inset-0 z-[70] bg-black/70 glass flex items-end md:items-center justify-center p-4" onClick={onClose}>
       <div className="w-full max-w-md bg-surface-container border border-outline-variant rounded-xl p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-2 mb-1">
-          <Icon name="shield" fill className="text-acid-lime" />
+          <Icon name="shield" fill className="text-acid-on" />
           <h3 className="font-display text-headline-sm">사기이력 조회</h3>
         </div>
         <p className="text-secondary text-xs mb-4">입력값은 암호화 해시로만 조회되며 평문은 저장되지 않습니다.</p>

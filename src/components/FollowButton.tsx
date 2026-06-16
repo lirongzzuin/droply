@@ -35,7 +35,7 @@ export function WishlistButton({ artworkId }: { artworkId: string }) {
       className="w-10 h-10 flex items-center justify-center rounded-full border border-outline-variant hover:bg-surface-container active:scale-90 transition-all"
     >
       <span
-        className={cn("material-symbols-outlined", on ? "fill text-acid-lime" : "text-primary")}
+        className={cn("material-symbols-outlined", on ? "fill text-acid-on" : "text-primary")}
         aria-hidden
       >
         bookmark

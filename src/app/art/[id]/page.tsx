@@ -48,7 +48,7 @@ export default async function ArtworkDetail({ params }: { params: { id: string }
         <section className="px-container-margin mt-stack-lg">
           <div className="flex justify-between items-start gap-4">
             <div className="space-y-1">
-              {art.edition && <p className="font-mono text-label-caps text-acid-lime uppercase">Edition {art.edition}</p>}
+              {art.edition && <p className="font-mono text-label-caps text-acid-on uppercase">Edition {art.edition}</p>}
               <h1 className="font-display text-headline-md md:text-display-lg leading-tight uppercase">{art.title}</h1>
             </div>
             <div className="flex flex-col items-end gap-3 shrink-0">
@@ -66,7 +66,7 @@ export default async function ArtworkDetail({ params }: { params: { id: string }
               <div className="min-w-0">
                 <div className="flex items-center gap-1">
                   <p className="font-bold text-on-surface truncate">{art.artist.displayName}</p>
-                  {art.artist.isVerified && <Icon name="verified" fill className="text-acid-lime text-[16px]" />}
+                  {art.artist.isVerified && <Icon name="verified" fill className="text-acid-on text-[16px]" />}
                 </div>
                 <p className="text-secondary text-sm">@{art.artist.handle}</p>
               </div>
@@ -100,7 +100,7 @@ export default async function ArtworkDetail({ params }: { params: { id: string }
                 {art.priceHistory.map((h, i) => (
                   <div key={i} className="flex justify-between items-center p-3 bg-surface-container-lowest rounded-lg">
                     <div className="flex gap-3 items-center">
-                      <Icon name={h.kind === "SOLD" ? "shopping_cart" : h.kind === "LISTED" ? "sell" : "history"} className={h.kind === "SOLD" ? "text-acid-lime" : "text-secondary"} />
+                      <Icon name={h.kind === "SOLD" ? "shopping_cart" : h.kind === "LISTED" ? "sell" : "history"} className={h.kind === "SOLD" ? "text-acid-on" : "text-secondary"} />
                       <div>
                         <p className="text-sm font-bold">{h.label}</p>
                         <p className="text-[10px] text-secondary uppercase">

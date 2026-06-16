@@ -93,7 +93,7 @@ export function AuctionRoom({ artworkId, image, title, likeCount, viewerHandle, 
           </div>
           <div className="absolute bottom-4 right-4 bg-black/60 glass border border-white/10 px-4 py-2 rounded-lg">
             <p className="font-mono text-[10px] text-secondary mb-1">AUCTION ENDS IN</p>
-            <div className="font-mono text-headline-sm text-acid-lime tabular-nums" suppressHydrationWarning>
+            <div className="font-mono text-headline-sm text-acid-on tabular-nums" suppressHydrationWarning>
               {ended ? "마감" : `${String(cd.hours).padStart(2, "0")}:${String(cd.minutes).padStart(2, "0")}:${String(cd.seconds).padStart(2, "0")}`}
             </div>
           </div>
@@ -110,7 +110,7 @@ export function AuctionRoom({ artworkId, image, title, likeCount, viewerHandle, 
               <span className="flex items-center gap-1"><Icon name="gavel" className="text-[16px]" /> {view.bidCount}명 입찰</span>
               <span className="flex items-center gap-1"><Icon name="favorite" className="text-[16px]" /> {formatCount(likeCount)}명 관심</span>
             </div>
-            {isTop && !ended && <span className="mt-3 text-[11px] font-mono text-acid-lime bg-acid-lime/10 px-3 py-1 rounded-full">현재 내가 최고가 입찰자예요</span>}
+            {isTop && !ended && <span className="mt-3 text-[11px] font-mono text-acid-on bg-acid-lime/10 px-3 py-1 rounded-full">현재 내가 최고가 입찰자예요</span>}
           </div>
         </section>
 
@@ -118,7 +118,7 @@ export function AuctionRoom({ artworkId, image, title, likeCount, viewerHandle, 
           <div className="flex justify-between items-center mb-stack-md">
             <h3 className="font-display text-headline-sm">입찰 기록</h3>
             {!ended && (
-              <span className="text-[12px] text-acid-lime flex items-center gap-1">
+              <span className="text-[12px] text-acid-on flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-acid-lime animate-pulse-glow" /> 실시간 업데이트 중
               </span>
             )}
@@ -138,7 +138,7 @@ export function AuctionRoom({ artworkId, image, title, likeCount, viewerHandle, 
                 </div>
                 <div className="text-right">
                   <p className={cn("font-mono", i === 0 ? "text-primary" : "text-secondary")}>{formatKRW(b.amount)}</p>
-                  {i === 0 && <span className="text-[10px] px-2 py-0.5 bg-acid-lime/10 text-acid-lime rounded uppercase font-mono">Top Bid</span>}
+                  {i === 0 && <span className="text-[10px] px-2 py-0.5 bg-acid-lime/10 text-acid-on rounded uppercase font-mono">Top Bid</span>}
                 </div>
               </div>
             ))}
@@ -152,7 +152,7 @@ export function AuctionRoom({ artworkId, image, title, likeCount, viewerHandle, 
         ) : (
           <>
             <div className="flex items-center justify-center gap-2 mb-4">
-              <Icon name="info" className="text-[14px] text-acid-lime" />
+              <Icon name="info" className="text-[14px] text-acid-on" />
               <p className="text-[11px] text-secondary">마감 {view.antiSnipeSec / 60}분 전 입찰 시 경매가 자동 연장됩니다.</p>
             </div>
             <div className="grid grid-cols-2 gap-3 mb-3">

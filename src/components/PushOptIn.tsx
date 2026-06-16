@@ -45,12 +45,12 @@ export function PushOptIn() {
       disabled={state === "denied"}
       className="w-full mt-stack-lg flex items-center gap-3 p-4 bg-acid-lime/5 border border-acid-lime/20 rounded-xl text-left active:scale-[0.99] transition-all disabled:opacity-60"
     >
-      <Icon name="notifications_active" className="text-acid-lime" />
+      <Icon name="notifications_active" className="text-acid-on" />
       <span className="flex-1">
-        <span className="block font-bold text-acid-lime">푸시 알림 켜기</span>
+        <span className="block font-bold text-acid-on">푸시 알림 켜기</span>
         <span className="block text-secondary text-sm">{state === "denied" ? "브라우저 설정에서 알림을 허용해 주세요." : "드롭 오픈·입찰 추월·새 메시지를 실시간으로."}</span>
       </span>
-      <Icon name="chevron_right" className="text-acid-lime" />
+      <Icon name="chevron_right" className="text-acid-on" />
     </button>
   );
 }

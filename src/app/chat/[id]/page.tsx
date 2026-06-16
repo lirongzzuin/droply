@@ -24,7 +24,7 @@ export default async function ChatPage({ params }: { params: { id: string } }) {
           <div className="flex flex-col">
             <div className="flex items-center gap-1">
               <span className="font-display text-headline-sm text-primary">@{art.artist.handle}</span>
-              {art.artist.isVerified && <Icon name="verified" fill className="text-acid-lime text-[16px]" />}
+              {art.artist.isVerified && <Icon name="verified" fill className="text-acid-on text-[16px]" />}
             </div>
             <span className="text-[10px] font-mono text-secondary tracking-widest">
               {art.artist.isVerified ? "TRUSTED SELLER" : "SELLER"} · 신뢰도 {art.artist.trustScore}

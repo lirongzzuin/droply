@@ -28,10 +28,14 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+// 플래시 방지: 하이드레이션 전 저장값/시스템 설정으로 .dark 즉시 적용
+const themeInit = `(function(){try{var t=localStorage.getItem('droply-theme');var m=window.matchMedia('(prefers-color-scheme: dark)').matches;var d=t==='dark'||((!t||t==='system')&&m);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" className={`dark ${syne.variable} ${spaceGrotesk.variable} ${beVietnam.variable}`}>
+    <html lang="ko" className={`${syne.variable} ${spaceGrotesk.variable} ${beVietnam.variable}`} suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap"

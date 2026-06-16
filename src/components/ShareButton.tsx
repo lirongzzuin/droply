@@ -28,9 +28,9 @@ export function ShareButton({ title, path }: { title: string; path: string }) {
 
   return (
     <button onClick={onShare} className="relative text-primary active:scale-95 transition-transform" aria-label="공유">
-      <Icon name={copied ? "check" : "ios_share"} className={copied ? "text-acid-lime" : ""} />
+      <Icon name={copied ? "check" : "ios_share"} className={copied ? "text-acid-on" : ""} />
       {copied && (
-        <span className="absolute -bottom-7 right-0 whitespace-nowrap font-mono text-[10px] text-acid-lime bg-surface-container px-2 py-1 rounded">
+        <span className="absolute -bottom-7 right-0 whitespace-nowrap font-mono text-[10px] text-acid-on bg-surface-container px-2 py-1 rounded">
           링크 복사됨
         </span>
       )}

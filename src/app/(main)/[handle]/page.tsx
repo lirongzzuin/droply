@@ -72,7 +72,7 @@ export default async function ArtistProfile({
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="font-display text-headline-md font-extrabold tracking-tight uppercase">{artist.displayName}</h1>
-                {artist.isVerified && <Icon name="verified" fill className="text-acid-lime text-lg" />}
+                {artist.isVerified && <Icon name="verified" fill className="text-acid-on text-lg" />}
                 {artist.isTopArtist && (
                   <span className="px-2 py-0.5 bg-primary-fixed text-on-primary-fixed rounded-full flex items-center gap-1">
                     <Icon name="workspace_premium" fill className="text-[12px]" />
@@ -101,12 +101,12 @@ export default async function ArtistProfile({
 
         <div className="mt-stack-md flex flex-wrap gap-3">
           <span className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container rounded-full border border-outline-variant">
-            <Icon name="shield" fill className="text-acid-lime text-[16px]" />
+            <Icon name="shield" fill className="text-acid-on text-[16px]" />
             <span className="font-mono text-sm">신뢰도 {effectiveTrust}</span>
           </span>
           {reviews.length > 0 && (
             <span className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container rounded-full border border-outline-variant">
-              <Icon name="star" fill className="text-acid-lime text-[16px]" />
+              <Icon name="star" fill className="text-acid-on text-[16px]" />
               <span className="font-mono text-sm">{avgRating.toFixed(1)} · 리뷰 {reviews.length}</span>
             </span>
           )}

@@ -97,7 +97,7 @@ export function DropRoom(props: Props) {
             <span className="px-3 py-1 bg-acid-lime text-black font-mono text-label-caps rounded">EXCLUSIVE DROP</span>
             <div className="flex items-center gap-2">
               <span className={cn("w-2 h-2 rounded-full animate-pulse-glow", live ? "bg-error" : "bg-acid-lime")} />
-              <span className={cn("font-mono text-label-caps tracking-widest", live ? "text-error" : "text-acid-lime")}>{live ? "LIVE NOW" : "LIVE IN"}</span>
+              <span className={cn("font-mono text-label-caps tracking-widest", live ? "text-error" : "text-acid-on")}>{live ? "LIVE NOW" : "LIVE IN"}</span>
             </div>
           </div>
 
@@ -123,18 +123,18 @@ export function DropRoom(props: Props) {
           ) : (
             <div className="mt-4 flex flex-col items-center gap-6 w-full max-w-md">
               <div className="w-full flex justify-between items-center">
-                <span className="text-acid-lime font-mono text-label-caps flex items-center gap-2">
+                <span className="text-acid-on font-mono text-label-caps flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-acid-lime animate-pulse-glow" /> LIVE STOCK
                 </span>
-                <span className="font-mono text-white"><span className="text-acid-lime">{view.remaining}</span> / {view.totalStock} 남음</span>
+                <span className="font-mono text-white"><span className="text-acid-on">{view.remaining}</span> / {view.totalStock} 남음</span>
               </div>
               <div className="w-full h-1 bg-surface-container-highest">
                 <div className="h-full bg-acid-lime shadow-[0_0_10px_#D4FF3F] transition-all duration-500" style={{ width: `${pct}%` }} />
               </div>
               {bought ? (
                 <div className="w-full bg-acid-lime/10 border border-acid-lime/30 rounded-lg p-6 text-center">
-                  <Icon name="celebration" fill className="text-acid-lime text-4xl mb-2" />
-                  <p className="font-display text-headline-sm text-acid-lime">구매 성공!</p>
+                  <Icon name="celebration" fill className="text-acid-on text-4xl mb-2" />
+                  <p className="font-display text-headline-sm text-acid-on">구매 성공!</p>
                   <p className="text-secondary text-sm mt-1">한정 드롭을 손에 넣었어요. 주문 내역에서 확인하세요.</p>
                 </div>
               ) : view.soldOut ? (
@@ -191,7 +191,7 @@ export function DropRoom(props: Props) {
             <p className="text-secondary mb-8">현재 많은 사용자가 동시 접속 중입니다.<br />잠시만 기다려 주세요.</p>
             <div className="w-full bg-surface-container p-4 mb-4">
               <span className="font-mono text-secondary text-[10px] block mb-2 uppercase">Your Position</span>
-              <span className="font-display text-display-lg text-acid-lime tracking-tighter">#{queue.toLocaleString()}</span>
+              <span className="font-display text-display-lg text-acid-on tracking-tighter">#{queue.toLocaleString()}</span>
             </div>
             <p className="font-mono text-[10px] text-error">※ 새로고침 시 순서가 밀릴 수 있습니다.</p>
           </div>

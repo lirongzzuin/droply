@@ -25,7 +25,7 @@ export function LikeButton({
         aria-pressed={liked}
         className="w-10 h-10 flex items-center justify-center rounded-full border border-outline-variant hover:bg-surface-container active:scale-90 transition-all"
       >
-        <Icon name="favorite" fill={liked} className={cn(liked ? "text-acid-lime" : "text-primary")} />
+        <Icon name="favorite" fill={liked} className={cn(liked ? "text-acid-on" : "text-primary")} />
       </button>
     );
   }
@@ -37,7 +37,7 @@ export function LikeButton({
         aria-pressed={liked}
         className="flex items-center justify-center p-2 rounded-full bg-white/10 glass active:scale-90 transition-transform"
       >
-        <Icon name="favorite" fill={liked} className={cn(liked ? "text-acid-lime" : "text-white")} />
+        <Icon name="favorite" fill={liked} className={cn(liked ? "text-acid-on" : "text-white")} />
       </button>
       <span className="font-mono text-[12px] text-white" suppressHydrationWarning>
         {formatCount(count)}

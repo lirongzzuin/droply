@@ -72,7 +72,7 @@ export function OrdersList({ orders }: { orders: OrderVM[] }) {
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-start gap-2">
                 <p className="font-bold truncate">{o.artworkTitle}</p>
-                <span className={cn("shrink-0 text-[10px] font-mono px-2 py-0.5 rounded uppercase", o.status === "COMPLETED" ? "bg-acid-lime/10 text-acid-lime" : o.status === "PAID" ? "bg-primary-fixed/10 text-primary-fixed-dim" : "bg-surface-container-high text-secondary")}>
+                <span className={cn("shrink-0 text-[10px] font-mono px-2 py-0.5 rounded uppercase", o.status === "COMPLETED" ? "bg-acid-lime/10 text-acid-on" : o.status === "PAID" ? "bg-primary-fixed/10 text-primary-fixed-dim" : "bg-surface-container-high text-secondary")}>
                   {STATUS_LABEL[o.status] ?? o.status}
                 </span>
               </div>
@@ -112,7 +112,7 @@ function ReviewForm({ onSubmit, onCancel }: { onSubmit: (rating: number, comment
       <div className="flex gap-1 mb-3">
         {[1, 2, 3, 4, 5].map((n) => (
           <button key={n} onClick={() => setRating(n)} aria-label={`${n}점`}>
-            <span className={cn("material-symbols-outlined", n <= rating ? "fill text-acid-lime" : "text-secondary")} aria-hidden>star</span>
+            <span className={cn("material-symbols-outlined", n <= rating ? "fill text-acid-on" : "text-secondary")} aria-hidden>star</span>
           </button>
         ))}
       </div>

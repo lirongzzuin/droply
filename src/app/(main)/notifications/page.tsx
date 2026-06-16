@@ -33,7 +33,7 @@ export default function NotificationsPage() {
         actions={
           hasUnread ? (
             <form action={markAllReadAction}>
-              <button className="font-mono text-label-caps text-acid-lime">모두 읽음</button>
+              <button className="font-mono text-label-caps text-acid-on">모두 읽음</button>
             </form>
           ) : (
             <span />
@@ -56,7 +56,7 @@ export default function NotificationsPage() {
                 )}
               >
                 <span className="w-10 h-10 shrink-0 rounded-full bg-surface-container-high flex items-center justify-center">
-                  <Icon name={ICON[n.type] ?? "notifications"} className="text-acid-lime" />
+                  <Icon name={ICON[n.type] ?? "notifications"} className="text-acid-on" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">

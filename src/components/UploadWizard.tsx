@@ -74,7 +74,7 @@ export function UploadWizard() {
   if (done) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5 text-center px-6">
-        <Icon name="check_circle" fill className="text-acid-lime text-6xl" />
+        <Icon name="check_circle" fill className="text-acid-on text-6xl" />
         <h2 className="font-display text-headline-md">작품이 등록됐어요!</h2>
         <p className="text-secondary">‘{title || "Untitled"}’ 이(가) {saleType === "FIXED" ? "정가 판매" : saleType === "AUCTION" ? "경매" : "드롭"}으로 리스트에 올라갔습니다.</p>
         <button onClick={() => router.push("/")} className="bg-acid-lime text-black font-bold px-8 py-4 rounded-lg shadow-acid active:scale-95 transition-all">
@@ -89,7 +89,7 @@ export function UploadWizard() {
       {/* 진행 표시 */}
       <div className="mb-section-gap">
         <div className="flex justify-between mb-2">
-          <span className="font-mono text-label-caps text-acid-lime uppercase">Step {step} / 4</span>
+          <span className="font-mono text-label-caps text-acid-on uppercase">Step {step} / 4</span>
           <span className="font-mono text-label-caps text-secondary uppercase">{STEPS[step - 1]}</span>
         </div>
         <div className="h-1 bg-surface-container-highest w-full rounded-full overflow-hidden">
@@ -103,7 +103,7 @@ export function UploadWizard() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-gutter">
             <label className="aspect-square bg-surface-container-low border border-dashed border-outline-variant flex flex-col items-center justify-center cursor-pointer hover:border-acid-lime transition-colors group rounded-lg">
               <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => onFiles(e.target.files)} />
-              <Icon name="add_a_photo" className="text-4xl mb-2 text-secondary group-hover:text-acid-lime" />
+              <Icon name="add_a_photo" className="text-4xl mb-2 text-secondary group-hover:text-acid-on" />
               <span className="font-mono text-[10px] text-secondary">MAX 10MB</span>
             </label>
             {images.map((img, i) => (
@@ -171,14 +171,14 @@ export function UploadWizard() {
             <PayToggle on={allowDirect} onToggle={() => setAllowDirect((v) => !v)} title="채팅 직거래 (계좌이체)" sub="수수료 없음 · 채팅으로 협의" icon="chat" />
 
             <div className="mt-section-gap p-stack-md bg-acid-lime/5 border border-acid-lime/20 rounded-xl space-y-1">
-              <p className="text-acid-lime font-mono text-label-caps mb-2">FINAL REVIEW</p>
+              <p className="text-acid-on font-mono text-label-caps mb-2">FINAL REVIEW</p>
               <Row label="작품명" value={title || "Untitled"} />
               <Row label="판매 방식" value={saleType === "FIXED" ? "정가 판매" : saleType === "AUCTION" ? "경매" : "드롭"} />
               <Row label="가격" value={formatKRW(price)} />
               {allowPg && <Row label="플랫폼 수수료 (8%)" value={`- ${formatKRW(settle.feeAmount)}`} />}
               <div className="flex justify-between items-center pt-2 border-t border-outline-variant mt-2">
                 <span className="text-secondary text-sm">수수료 제외 정산 예정액</span>
-                <span className="text-acid-lime font-mono text-xl">{formatKRW(allowPg ? settle.payoutAmount : price)}</span>
+                <span className="text-acid-on font-mono text-xl">{formatKRW(allowPg ? settle.payoutAmount : price)}</span>
               </div>
               {allowDirect && !allowPg && <p className="text-[11px] text-secondary pt-1">직거래만 선택 시 정산은 당사자 간 계좌이체로 진행됩니다.</p>}
             </div>
@@ -238,7 +238,7 @@ function SaleCard({ active, onClick, icon, title, desc, children }: { active: bo
     <div onClick={onClick} className={cn("p-stack-md border bg-surface-container rounded-lg cursor-pointer transition-all", active ? "border-acid-lime" : "border-outline-variant hover:border-acid-lime/50")}>
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-3">
-          <Icon name={icon} className={active ? "text-acid-lime" : "text-primary"} />
+          <Icon name={icon} className={active ? "text-acid-on" : "text-primary"} />
           <span className="font-display text-lg text-primary">{title}</span>
         </div>
         <span className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center", active ? "border-acid-lime bg-acid-lime" : "border-outline-variant")}>

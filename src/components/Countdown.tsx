@@ -32,7 +32,7 @@ const Block = ({ value, label }: { value: number; label: string }) => (
   </div>
 );
 
-const Colon = () => <span className="font-display text-display-lg md:text-display-xl text-acid-lime mb-6">:</span>;
+const Colon = () => <span className="font-display text-display-lg md:text-display-xl text-acid-on mb-6">:</span>;
 
 /** 드롭 히어로용 거대 블록 카운트다운 */
 export function CountdownBlocks({ target }: { target: string }) {

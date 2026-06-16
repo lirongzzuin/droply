@@ -66,7 +66,7 @@ export function BuyBar({ artwork, loggedIn }: { artwork: Artwork; loggedIn: bool
         >
           <div className="w-full max-w-md bg-surface-container border border-outline-variant rounded-xl p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-4">
-              <Icon name={result.ok ? "check_circle" : "error"} fill className={result.ok ? "text-acid-lime text-3xl" : "text-error text-3xl"} />
+              <Icon name={result.ok ? "check_circle" : "error"} fill className={result.ok ? "text-acid-on text-3xl" : "text-error text-3xl"} />
               <h3 className="font-display text-headline-sm">{result.ok ? "주문 생성 완료" : "구매 불가"}</h3>
             </div>
             <p className="text-secondary text-sm mb-4">{result.message}</p>
@@ -75,7 +75,7 @@ export function BuyBar({ artwork, loggedIn }: { artwork: Artwork; loggedIn: bool
                 <Row label="주문번호" value={result.orderId!} mono />
                 <Row label="결제 금액" value={formatKRW(result.amount)} />
                 <Row label="플랫폼 수수료(8%)" value={`- ${formatKRW(result.feeAmount)}`} />
-                {result.replayed && <p className="text-acid-lime text-[11px] font-mono pt-1">멱등 처리: 중복 요청이 안전하게 무시됨</p>}
+                {result.replayed && <p className="text-acid-on text-[11px] font-mono pt-1">멱등 처리: 중복 요청이 안전하게 무시됨</p>}
               </div>
             )}
             <div className="mt-5 flex gap-2">

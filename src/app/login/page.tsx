@@ -23,7 +23,7 @@ export default function LoginPage() {
 
       <div className="space-y-3 my-8">
         <h1 className="font-display text-display-lg leading-[0.95] uppercase">
-          발견하고,<br />드롭하고,<br /><span className="text-acid-lime">소장하세요.</span>
+          발견하고,<br />드롭하고,<br /><span className="text-acid-on">소장하세요.</span>
         </h1>
         <p className="text-secondary">신진 작가와 Gen Z 컬렉터의 힙한 아트 플랫폼.</p>
       </div>
@@ -41,7 +41,7 @@ export default function LoginPage() {
 
         {!anyOAuth && (
           <div className="rounded-xl border border-outline-variant bg-surface-container p-4">
-            <p className="font-mono text-label-caps text-acid-lime uppercase mb-1">DEV MODE</p>
+            <p className="font-mono text-label-caps text-acid-on uppercase mb-1">DEV MODE</p>
             <p className="text-secondary text-sm mb-4">
               소셜 로그인 키가 설정되지 않아 개발용 로그인을 노출합니다. (.env에 KAKAO/GOOGLE/APPLE 키 설정 시 자동 전환)
             </p>
