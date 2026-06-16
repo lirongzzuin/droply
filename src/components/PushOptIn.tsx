@@ -3,16 +3,27 @@
 import { useState, useEffect } from "react";
 import { Icon } from "./Icon";
 
+const VAPID = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+
+function urlBase64ToUint8Array(base64: string) {
+  const padding = "=".repeat((4 - (base64.length % 4)) % 4);
+  const b64 = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(b64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
 /**
- * Web Push 옵트인 — 브라우저 알림 권한 요청 + 구독 stub 저장.
- * (실제 푸시 발송은 Service Worker + VAPID 필요 — 운영 단계 연결)
+ * Web Push 옵트인 — 알림 권한 + (VAPID 설정 시)실제 구독 저장.
+ * VAPID 키가 없으면 권한 요청까지만(발송은 운영 단계에서 키 주입 시 활성).
  */
 export function PushOptIn() {
   const [supported, setSupported] = useState(false);
   const [state, setState] = useState<"idle" | "granted" | "denied">("idle");
 
   useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
+    if (typeof window !== "undefined" && "Notification" in window && "serviceWorker" in navigator) {
       setSupported(true);
       if (Notification.permission === "granted") setState("granted");
       else if (Notification.permission === "denied") setState("denied");
@@ -23,19 +34,29 @@ export function PushOptIn() {
 
   async function enable() {
     const perm = await Notification.requestPermission();
-    if (perm === "granted") {
-      setState("granted");
-      try {
-        await fetch("/api/push/subscribe", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ endpoint: `demo:${Date.now()}` }),
-        });
-      } catch {
-        /* noop */
-      }
-    } else {
+    if (perm !== "granted") {
       setState("denied");
+      return;
+    }
+    setState("granted");
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      let subscription: PushSubscription | { endpoint: string } | null = null;
+      if (VAPID && reg.pushManager) {
+        subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID),
+        });
+      } else {
+        subscription = { endpoint: `permission-only:${Date.now()}` };
+      }
+      await fetch("/api/push/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(subscription),
+      });
+    } catch {
+      /* 구독 실패해도 권한은 부여됨 */
     }
   }
 

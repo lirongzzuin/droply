@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Syne, Space_Grotesk, Be_Vietnam_Pro } from "next/font/google";
 import { Providers } from "@/components/Providers";
+import { PwaRegister } from "@/components/PwaRegister";
 import "./globals.css";
 
 const syne = Syne({ subsets: ["latin"], weight: ["700", "800"], variable: "--font-syne" });
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-background text-on-background font-body antialiased">
         <Providers>{children}</Providers>
+        <PwaRegister />
       </body>
     </html>
   );
