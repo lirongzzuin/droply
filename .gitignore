@@ -8,3 +8,8 @@ out
 *.tsbuildinfo
 next-env.d.ts
 /prisma/dev.db
+
+# 민감 문서 (주민번호 등 PII 포함) — 절대 커밋 금지
+사업자등록증*
+*.png.bak
+/docs/private
