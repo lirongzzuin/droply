@@ -1,0 +1,287 @@
+// DROPLY — 소셜 아트 드롭 플랫폼 도메인 모델
+// 단일 계정 + 역할 플래그(누구나 사거나 팔 수 있음). 모놀리식, 모듈 경계 명확.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────── 사용자 / 작가 ────────────────
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  handle        String   @unique // @username, 인스타 감성 프로필 URL /@handle
+  displayName   String
+  avatarUrl     String?
+  bio           String?
+  oauthProvider String // google | apple | kakao | dev
+  oauthSub      String
+  isArtist      Boolean  @default(false) // 작가 프로필 활성 여부
+  isVerified    Boolean  @default(false) // 본인인증/신뢰 배지
+  trustScore    Int      @default(0) // 거래완료/신고이력 기반
+  createdAt     DateTime @default(now())
+
+  artistProfile ArtistProfile?
+  artworks      Artwork[]
+  bids          Bid[]
+  ordersBought  Order[]        @relation("Buyer")
+  ordersSold    Order[]        @relation("Seller")
+  likes         Like[]
+  wishlist      Wishlist[]
+  following     Follow[]       @relation("Follower")
+  followers     Follow[]       @relation("Following")
+  reviewsGiven  Review[]       @relation("Reviewer")
+  reviewsGot    Review[]       @relation("Reviewee")
+  notifications Notification[]
+
+  @@unique([oauthProvider, oauthSub])
+}
+
+model ArtistProfile {
+  id         String  @id @default(cuid())
+  userId     String  @unique
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  statement  String // 작가 자기소개 / 작업 세계관
+  coverUrl   String?
+  socials    Json // { instagram, tiktok, website }
+  payoutInfo Json? // 정산 계좌 (암호화 저장)
+  isTopArtist Boolean @default(false)
+}
+
+// ──────────────── 작품 ────────────────
+model Artwork {
+  id          String         @id @default(cuid())
+  artistId    String
+  artist      User           @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  medium      String // 원화 / 프린트 / 디지털 / 오브제
+  edition     String? // "12/50" 한정판 표기
+  saleType    SaleType
+  status      ArtworkStatus  @default(LISTED)
+  tags        String[]
+  fixedPrice  Int? // 정찰제 가격(원, 정수)
+  allowPg     Boolean        @default(true) // 방식 A: PG 온라인 결제 허용
+  allowDirect Boolean        @default(false) // 방식 B: 채팅 직거래 허용
+  likeCount   Int            @default(0)
+  viewCount   Int            @default(0)
+  createdAt   DateTime       @default(now())
+
+  images   ArtworkImage[]
+  auction  Auction?
+  drop     DropItem?
+  orders   Order[]
+  likes    Like[]
+  wishlist Wishlist[]
+
+  @@index([saleType, status])
+  @@index([artistId])
+}
+
+model ArtworkImage {
+  id        String  @id @default(cuid())
+  artworkId String
+  artwork   Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  url       String
+  position  Int     @default(0)
+}
+
+enum SaleType {
+  FIXED
+  AUCTION
+  DROP
+}
+
+enum ArtworkStatus {
+  DRAFT
+  LISTED
+  RESERVED
+  SOLD
+  ARCHIVED
+}
+
+// ──────────────── 경매 ────────────────
+model Auction {
+  id           String        @id @default(cuid())
+  artworkId    String        @unique
+  artwork      Artwork       @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  startPrice   Int
+  minIncrement Int
+  reservePrice Int?
+  startsAt     DateTime
+  endsAt       DateTime
+  status       AuctionStatus @default(SCHEDULED)
+  highBidId    String?
+  version      Int           @default(0) // 낙관적 락
+  antiSnipeSec Int           @default(180)
+  bids         Bid[]
+}
+
+enum AuctionStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+model Bid {
+  id             String   @id @default(cuid())
+  auctionId      String
+  auction        Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  bidderId       String
+  bidder         User     @relation(fields: [bidderId], references: [id])
+  amount         Int
+  idempotencyKey String   @unique // 멱등 입찰
+  createdAt      DateTime @default(now())
+
+  @@index([auctionId, amount(sort: Desc)])
+}
+
+// ──────────────── 드롭 (슈프림식 한정판) ────────────────
+model DropItem {
+  id           String   @id @default(cuid())
+  artworkId    String   @unique
+  artwork      Artwork  @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  dropAt       DateTime
+  totalStock   Int
+  soldStock    Int      @default(0)
+  perUserLimit Int      @default(1)
+  version      Int      @default(0) // 재고 차감 동시성 제어
+}
+
+// ──────────────── 주문 / 결제 (멱등 핵심) ────────────────
+model Order {
+  id             String        @id @default(cuid())
+  artworkId      String
+  artwork        Artwork       @relation(fields: [artworkId], references: [id])
+  buyerId        String
+  buyer          User          @relation("Buyer", fields: [buyerId], references: [id])
+  sellerId       String
+  seller         User          @relation("Seller", fields: [sellerId], references: [id])
+  amount         Int
+  feeAmount      Int           @default(0) // 플랫폼 수수료(원)
+  payoutAmount   Int           @default(0) // 정산 예정액(원)
+  method         PaymentMethod
+  status         OrderStatus   @default(PENDING)
+  idempotencyKey String        @unique
+  pgTxnId        String?
+  createdAt      DateTime      @default(now())
+  review         Review?
+
+  @@index([buyerId])
+  @@index([sellerId])
+}
+
+enum PaymentMethod {
+  PG // 토스페이먼츠
+  DIRECT_TRANSFER // 채팅 직거래(계좌이체)
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  COMPLETED
+  CANCELLED
+  REFUNDED
+  DISPUTED
+}
+
+// ──────────────── 소셜 (발견 루프) ────────────────
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artworkId String
+  artwork   Artwork  @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, artworkId])
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artworkId String
+  artwork   Artwork  @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, artworkId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  orderId    String   @unique
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  reviewerId String
+  reviewer   User     @relation("Reviewer", fields: [reviewerId], references: [id])
+  revieweeId String
+  reviewee   User     @relation("Reviewee", fields: [revieweeId], references: [id])
+  rating     Int // 1~5
+  comment    String?
+  createdAt  DateTime @default(now())
+}
+
+// ──────────────── 채팅 (직거래 협의) ────────────────
+model ChatRoom {
+  id        String        @id @default(cuid())
+  artworkId String
+  buyerId   String
+  sellerId  String
+  createdAt DateTime      @default(now())
+  messages  ChatMessage[]
+
+  @@unique([artworkId, buyerId, sellerId])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  roomId    String
+  room      ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  senderId  String
+  body      String?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+}
+
+// ──────────────── 사기 방지 ────────────────
+model FraudCheckLog {
+  id        String   @id @default(cuid())
+  type      String // ACCOUNT | PHONE
+  hashedKey String // 계좌/번호는 평문 저장 금지, 해시
+  result    Json // 더치트 등 외부 조회 결과 요약
+  checkedBy String
+  createdAt DateTime @default(now())
+
+  @@index([hashedKey])
+}
+
+// ──────────────── 알림 ────────────────
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // OUTBID | WON | ENDING_SOON | DROP_OPEN | NEW_MESSAGE | PAID
+  title     String
+  body      String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+}
