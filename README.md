@@ -1,89 +1,128 @@
-# DROPLY 🟢
+# DROPLY
 
-> 신진 작가와 Gen Z 컬렉터가 작품을 **발견**하고, 정해진 시간에 **드롭**하며, **경매·정찰제**로 거래하는 힙한 소셜 아트 플랫폼.
-> Avant Arte의 발견×드롭 감성 + StockX의 투명 거래 + 슈프림식 한정 드롭.
+> 신진 작가의 작품을 발견하고, 정해진 시간에 한정 수량으로 "드롭"하며, 경매·정가로 거래하는 소셜 아트 플랫폼 프로토타입
 
-acid-lime(`#D4FF3F`) × 다크 미니멀, 모바일 우선 PWA. **외부 서비스 키가 하나도 없어도 즉시 구동**됩니다(전부 mock 폴백).
+![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=nextdotjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-Neon_Postgres-2D3748?logo=prisma)
+![Upstash](https://img.shields.io/badge/Upstash-Redis-00E9A3?logo=upstash&logoColor=white)
+![PortOne](https://img.shields.io/badge/PortOne-V2-1E64FF)
+![Vitest](https://img.shields.io/badge/Vitest-38_tests-6E9F18?logo=vitest&logoColor=white)
+
+**상태: 프로토타입.** 화면과 핵심 거래 로직은 동작하지만, 경매·드롭·주문 같은 쓰기 상태는 아직 서버 메모리(단일 인스턴스)에 있습니다.
+작품·작가 등 콘텐츠 읽기는 `DATABASE_URL` 이 있으면 Prisma(Neon)로, 없으면 mock 데이터로 동작합니다.
+
+---
+
+## 무엇을 해결하나
+
+한정판 아트 거래에서 문제가 되는 건 "동시에 몰리는 요청"입니다.
+
+- 경매 마감 직전 여러 명이 동시에 입찰해도 **입찰이 한 줄로 처리**되어야 하고
+- 한정 수량 드롭에서 **재고보다 많이 팔리면(오버셀) 안 되며**
+- 네트워크 재시도로 같은 요청이 두 번 와도 **주문·입찰이 한 번만** 생겨야 합니다.
+
+DROPLY 는 이 세 가지를 서비스 계층에서 보장하고, 외부 서비스 키가 하나도 없어도 전 기능이 mock 으로 돌아가도록 설계했습니다.
+
+## 아키텍처
+
+단일 Next.js 14(App Router) 앱으로 화면·Server Actions·API 를 모두 처리합니다 (Vercel 배포 기준).
+
+```
+src/
+├── app/                 피드 · 작품 상세 · 경매 · 드롭 · 채팅 · 프로필 · 등록 · 관리자 · 약관
+│   ├── actions/         Server Actions (주문 · 입찰 · 드롭 구매 · 결제 확인 · 사기 조회 · 신고)
+│   └── api/             health · 경매/드롭 폴링 · Web Push 구독 · PortOne 웹훅
+├── lib/
+│   ├── services/        auction · drop · order · chat · notifications · moderation (+ 테스트)
+│   ├── idempotency.ts   멱등 키 + 요청 해시 (24시간)
+│   ├── lock.ts          분산락 (Upstash SET NX EX / in-memory)
+│   ├── fee.ts           정산 (정가·경매 수수료 8%, 직거래 0%)
+│   ├── payments/        PortOne V2 서버 검증 · 채널 설정
+│   └── data.ts          콘텐츠 읽기 (Prisma ↔ mock 폴백)
+prisma/schema.prisma     모델 16개 + seed
+```
+
+외부 의존성은 모두 "어댑터 + mock 폴백" 구조입니다.
+
+| 기능 | 실서비스 | 키가 없을 때 |
+|------|---------|-------------|
+| DB | Neon(Postgres) + Prisma | mock 데이터 |
+| 락·멱등·레이트리밋 | Upstash Redis REST | in-memory |
+| 결제·본인인증 | PortOne V2 (카드·간편결제·가상계좌, 다날 본인인증) | mock 결제 |
+| 로그인 | NextAuth (카카오·Google·Apple) | 개발용 페르소나 로그인 |
+| 이메일 / 푸시 | Resend / Web Push(VAPID) | 콘솔 로그 / 권한 요청까지만 |
+
+`/api/health` 가 현재 어떤 어댑터가 실서비스·mock 인지 보여 줍니다.
+
+## 기술적으로 집중한 문제
+
+### 1. 경매 동시 입찰
+- **문제**: 마감 직전 동시 입찰이 몰리면 최고가 판정이 꼬이고, 마감 직전 입찰(스나이핑)로 다른 참여자가 대응할 시간이 없습니다.
+- **해결**: 입찰을 분산락 안에서 처리하고, 경매 상태에 `version` 을 두어 낙관적 락으로 한 번 더 검증합니다. 최소 호가 단위를 강제하고, 마감 `antiSnipeSec` 이내 입찰이면 마감을 연장하며, 추월당한 입찰자에게 알림을 남깁니다. 같은 멱등 키로 다시 온 입찰은 최초 결과를 돌려줍니다.
+- **결과**: 동시 입찰 직렬화·연장·낙찰/유찰을 `auction.test.ts` 로 검증합니다.
+
+### 2. 한정 드롭 오버셀 방지
+- **문제**: 재고 확인과 차감 사이에 다른 요청이 끼어들면 재고보다 많이 팔립니다.
+- **해결**: 락 안에서 "재고 확인 → 1인 구매 한도 확인 → 차감"을 한 번에 수행하고, 구매 요청에 멱등 키를 적용했습니다. 가상 웨이팅룸 UI 와 재고 폴링을 붙였습니다.
+- **결과**: 동시 구매 시 판매 수량이 재고를 넘지 않는 것과 1인 한도를 `drop.test.ts` 로 검증합니다.
+
+### 3. 결제 신뢰 경계
+- **문제**: 클라이언트나 웹훅이 보낸 결제 결과를 그대로 믿으면 금액 위·변조나 중복 주문이 생깁니다.
+- **해결**: 결제 후 클라이언트는 `paymentId` 만 서버에 전달하고, 서버가 PortOne API 로 금액·상태를 재조회해 검증한 뒤 `paymentId` 를 멱등 키로 주문을 만듭니다. 웹훅도 본문 대신 `paymentId` 로 재조회합니다(가상계좌 입금 완료 처리).
+- **결과**: 같은 멱등 키로 다시 요청해도 주문이 중복 생성되지 않는 것, 금액 불일치·실패/취소 상태 결제를 거부하는 것을 `order.test.ts`, `portone.test.ts` 로 검증합니다. (주문이 아직 메모리에 있어 웹훅 처리는 best-effort 입니다.)
+
+### 4. 운영비를 늘리지 않는 실시간
+- 상시 WebSocket 서버 대신 경량 폴링(`/api/auction/[id]`, `/api/drop/[id]`)과 Redis 원자 연산을 써서 서버리스 환경에서 고정비 없이 동작하게 했습니다.
+
+### 5. 개인정보 최소 보관
+- 직거래 전 계좌·전화번호 사기 이력 조회는 입력값을 SHA-256 해시로만 저장·조회합니다 (`app/actions/fraud.ts`).
+
+## 그 밖에 구현한 것
+
+무한 피드(필터 5종), 작품 상세(캐러셀·거래 히스토리·OG 이미지 자동 생성), 작가 프로필·리뷰·신뢰도 점수, 4단계 작품 등록 위저드, 좋아요·팔로우·위시리스트, 채팅 직거래·신고·관리자 모더레이션 큐, 알림, 라이트/다크 테마, PWA(서비스워커·설치·푸시 옵트인), 통신판매 표시 사항(사업자 정보 푸터·약관·개인정보처리방침·환불 정책).
+
+## 품질 / 테스트
+
+```bash
+npm test     # Vitest — 7개 파일, 38개 테스트
+```
+
+- 정산·멱등·카운트다운 유틸, 경매(동시 입찰·앤티스나이핑·낙찰), 드롭(오버셀·1인 한도), 주문(멱등·정산), PortOne 검증
+- `tsc --noEmit`, `next build` 통과 확인
+
+## 실행 방법
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000 — .env 없이 바로 동작 (mock 모드)
-npm test         # 핵심 도메인 로직(정산·멱등·카운트다운) 단위 테스트
-npm run build    # 프로덕션 빌드
+npm run dev        # http://localhost:3000 — .env 없이 mock 모드로 바로 동작
+npm test
+npm run build
 ```
 
-처음 진입 → **로그인** → (소셜 키 미설정 시) 개발용 페르소나로 로그인 → 피드/경매/드롭/등록 체험.
+로그인 화면에서 소셜 키가 없으면 개발용 페르소나로 로그인해 피드·경매·드롭·등록을 체험할 수 있습니다.
 
----
-
-## 아키텍처 (확정: 통합 Next.js 풀스택)
-
-스펙의 "운영이 쉽고 간단 + 월 $0~$30" 요구에 맞춰 **단일 Next.js 14 앱**으로 통합했습니다.
-(NestJS 분리안 대신 채택 — 배포 1곳, 워커 분리 불필요, 기존 사이드 프로젝트와 동일 패턴)
-
-```
-Next.js 14 (App Router) ── Vercel 단독 배포
- ├─ app/(routes)        피드 · 상세 · 경매 · 드롭 · 채팅 · 프로필 · 등록
- ├─ app/actions/*       Server Actions (멱등 주문 · 사기조회 · 인증)
- ├─ lib/data            데이터 접근 (현재 mock → DATABASE_URL 연결 시 Prisma)
- ├─ lib/redis           Upstash REST (미설정 시 in-memory 폴백)
- ├─ lib/fee             정산 계산 (정가·경매 8% / 직거래 0%)
- └─ lib/idempotency     멱등 처리 (Redis + 요청해시)
-
-DB: Neon(Postgres) · Redis: Upstash · 미디어: Cloudflare R2(egress 무료)
-큐: Upstash QStash / Vercel Cron (경매 마감·알림·정산 — Phase 3+)
-```
-
-**저비용 핵심**: R2로 이미지 egress 0원 · 서버리스 DB/Redis 무료티어 · Vercel Hobby → 초기 고정비 **$0~$20/월**.
-
----
-
-## 구현 범위 (Phase 0–7 전체) ✅
-
-- **Phase 0 — 기반**: Next 14 + TS + Tailwind 디자인 시스템(시안 토큰 포팅), 전체 Prisma 스키마, OAuth 어댑터(카카오·Google·Apple, 키 있을 때만 노출) + 개발용 로그인, PWA.
-- **Phase 1 — 발견 & 작품**: 무한 피드(5개 필터), 작품 상세(캐러셀·거래 히스토리·스펙·**인증샷 OG 자동 생성**), 작가 프로필(통계·탭·**리뷰 평점**·실효 신뢰도), 작품 등록 4단계 위저드, 좋아요·팔로우·위시리스트.
-- **Phase 2 — 정찰제 거래**: **멱등 주문** + 토스페이먼츠 어댑터(mock 폴백) 결제 승인 + 8% 정산, 주문 내역, 수령 확정, 구매 후 **리뷰→trustScore**.
-- **Phase 3 — 경매**: 서버 권위 입찰 = **분산락 + 낙관적 락(version) + 멱등 + 최소호가 + 앤티스나이핑 연장 + 추월 알림**, 낙찰/유찰(reserve) 마감, 경량 폴링 라이브(WS 상시가동 대비 운영비 0).
-- **Phase 4 — 드롭**: **원자 재고 차감(오버셀 0)** + 1인 한정 + 멱등 + 가상 웨이팅룸, 라이브 재고 폴링.
-- **Phase 5 — 채팅 직거래 & 사기방지**: 메시지 서버 영속, **계좌/번호 사기이력 조회(SHA-256 해시 저장)**, 신고 기능, **어드민 모더레이션 큐**, trustScore.
-- **Phase 6 — 소셜 & 알림**: 이벤트 알림 스토어(입찰추월/낙찰/판매/메시지/리뷰), 읽음 처리, **Web Push 옵트인**, Resend 이메일 어댑터(mock), OG 공유카드, 거래 히스토리, 검색.
-- **Phase 7 — 하드닝**: `/api/health`(어댑터 상태), 레이트리밋(입찰/구매), 동시성·오버셀·멱등 **통합 테스트**.
-- **사업 모델**: 정가·경매 8% 수수료, 직거래 0% — 정산/등록/주문에 반영.
-
-**테스트 34 passing**: 정산·멱등·카운트다운 유틸 + 경매(동시 입찰 직렬화·앤티스나이핑·낙찰) + 드롭(오버셀 0·1인 한정) + 주문(멱등·정산).
-
-### 주요 라우트
-화면: `/` `/search` `/notifications` `/me` `/me/orders` `/@handle` `/art/[id]` `/auction/[id]` `/drop/[id]` `/chat/[id]` `/new` `/login` `/onboarding` `/admin`
-API: `/api/health` · `/api/auction/[id]`(폴링) · `/api/drop/[id]`(폴링) · `/api/push/subscribe`
-
-### 운영비/관리 효율 설계
-- 실시간을 **경량 폴링 + Redis 원자연산**으로 → 상시 WS 서버 불필요(고정비 0).
-- 모든 외부 의존을 **어댑터 + mock 폴백**으로 → 키 없이도 전 기능 동작, 운영 전환은 env만 채우면 됨.
-- `/api/health`로 현재 어댑터(mock/실서비스) 가시화.
-
----
-
-## 운영 전환 체크리스트 (env 채우면 자동 활성)
-
-`.env.example` 참고. 키를 채우는 즉시 해당 기능이 mock → 실서비스로 전환됩니다.
-
-| 변수 | 효과 |
-|---|---|
-| `DATABASE_URL` (Neon) | mock → Prisma 실 DB. `npm run prisma:push && npm run seed` |
-| `KAKAO/GOOGLE/APPLE_*` | 개발 로그인 → 실제 소셜 OAuth 버튼 노출 |
-| `UPSTASH_REDIS_REST_*` | in-memory → 분산 멱등·락·레이트리밋 |
-| `R2_*` | 외부 URL → R2 업로드(egress 무료) |
-| `TOSS_*` | 정가 구매 주문 → 토스페이먼츠 실결제 (Phase 2) |
-| `THECHEAT_API_KEY` | 자체 mock → 더치트 실시간 사기조회 (Phase 5) |
-
-## 배포 (Vercel)
+실 DB 를 쓰려면:
 
 ```bash
-vercel            # 프리뷰
-vercel --prod     # 프로덕션
+cp .env.example .env     # DATABASE_URL 등 입력
+npm run prisma:push
+npm run seed
 ```
-환경변수는 Vercel 대시보드 또는 `vercel env`로 주입. Neon·Upstash·R2는 Vercel Marketplace에서 연동 가능.
 
-## 다음 로드맵
-- **Phase 2** 토스페이먼츠 실결제 + 정산 큐  ·  **Phase 3** 경매 실시간 WS + 분산락/낙관적락 + BullMQ/QStash 마감
-- **Phase 4** 드롭 Redis Lua 원자 재고  ·  **Phase 5** 채팅 영속 + trustScore/모더레이션  ·  **Phase 6** Web Push/이메일·검색·리뷰
+## 설정
+
+모든 변수는 `.env.example` 에 설명과 함께 있습니다. 비워 두면 해당 기능은 mock 으로 동작합니다.
+
+| 변수 | 효과 |
+|------|------|
+| `DATABASE_URL` | mock → Prisma(Neon) |
+| `AUTH_SECRET`, `KAKAO_*` / `GOOGLE_*` / `APPLE_*` | 소셜 로그인 활성화 |
+| `UPSTASH_REDIS_REST_*` | in-memory → 분산 락·멱등·레이트리밋 |
+| `NEXT_PUBLIC_PORTONE_*`, `PORTONE_API_SECRET` | mock 결제 → PortOne 실결제·본인인증 |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | Web Push 발송 |
+| `NEXT_PUBLIC_BIZ_*` | 푸터·약관에 표시할 사업자 정보 |
+
+## 개발 방식
+
+[Claude Code](https://claude.com/claude-code) 와 함께 설계·구현했습니다 (커밋의 `Co-Authored-By` 참고).

@@ -13,3 +13,23 @@ next-env.d.ts
 사업자등록증*
 *.png.bak
 /docs/private
+
+# 환경변수·키 (예시 파일만 커밋)
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+
+# 로그·로컬 DB·IDE
+*.log
+*.sqlite
+*.db
+.idea/
+.vscode/
+
+# 에이전트 도구 로컬 파일
+.agents/
+.claude/
+.neon
+skills-lock.json
